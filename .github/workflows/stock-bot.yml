@@ -1,0 +1,27 @@
+name: Stock Bot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pasiimti koda
+        uses: actions/checkout@v4
+
+      - name: Paruosti Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Idiegti bibliotekas
+        run: pip install -r requirements.txt
+
+      - name: Paleisti bota
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          API_KEY: ${{ secrets.API_KEY }}
+        run: python main.py
