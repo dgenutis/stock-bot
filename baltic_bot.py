@@ -2,6 +2,8 @@ import os
 import requests
 import yfinance as yf
 from dotenv import load_dotenv
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 load_dotenv()
 
@@ -40,7 +42,12 @@ def format_stock(name, data):
     change = data.get("d", 0)
     percent = data.get("dp", 0)
 
-    icon = "🟢" if percent > 0 else "🔴"
+    if percent > 0:
+        icon = "🟢"
+    elif percent < 0:
+        icon = "🔴"
+    else:
+        icon = "⚪"
 
     return (
         f"{name}\n"
@@ -62,25 +69,32 @@ def send_telegram_message(text):
 
 
 def main():
-    # Baltic akcijos per Yahoo Finance
+    # 🕒 Vilniaus laikas
+    now = datetime.now(ZoneInfo("Europe/Vilnius"))
+    update_time = now.strftime("%Y-%m-%d %H:%M LT")
+
+    # Baltic akcijos
     kne = get_yahoo_data("KNE1L.VS")
     dgr = get_yahoo_data("DGR1R.RG")
     roe = get_yahoo_data("ROE1L.VS")
     ign = get_yahoo_data("IGN1L.VS")
     tel = get_yahoo_data("TEL1L.VS")
 
-    # Crypto per Yahoo Finance
+    # Crypto
     btc = get_yahoo_data("BTC-USD")
     eth = get_yahoo_data("ETH-USD")
 
     text = (
-        "🇱🇹 BALTIC PORTFOLIS\n\n"
-        + format_stock("Kauno energija", kne) + "\n"
+        f"🇱🇹 BALTIC PORTFELIS\n\n"
+        f"🕒 Update: {update_time}\n\n\n"
+
+        + format_stock("KN Energies", kne) + "\n"
         + format_stock("DelfinGroup", dgr) + "\n"
         + format_stock("Rokiškio sūris", roe) + "\n"
-        + format_stock("Ignitis grupė", ign) + "\n"
-        + format_stock("Telia Lietuva", tel) + "\n"
-        + "₿ CRYPTO\n\n"
+        + format_stock("Ignitis", ign) + "\n"
+        + format_stock("Telia", tel) + "\n"
+
+        + "\n₿ CRYPTO\n\n"
         + format_stock("Bitcoin", btc) + "\n"
         + format_stock("Ethereum", eth)
     )

@@ -1,6 +1,8 @@
 import os
 import requests
 from dotenv import load_dotenv
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 load_dotenv()
 
@@ -22,7 +24,12 @@ def format_stock(name, data):
     change = data.get("d", 0)
     percent = data.get("dp", 0)
 
-    icon = "🟢" if percent > 0 else "🔴"
+    if percent > 0:
+        icon = "🟢"
+    elif percent < 0:
+        icon = "🔴"
+    else:
+        icon = "⚪"
 
     return (
         f"{name}\n"
@@ -43,6 +50,10 @@ def send_telegram_message(text):
 
 
 def main():
+    # 🕒 Vilniaus laikas
+    now = datetime.now(ZoneInfo("Europe/Vilnius"))
+    update_time = now.strftime("%Y-%m-%d %H:%M LT")
+
     # akcijos
     tsla = get_stock("TSLA")
     aapl = get_stock("AAPL")
@@ -59,6 +70,7 @@ def main():
 
     text = (
         "📊 PORTFOLIO UPDATE\n\n"
+        f"🕒 {update_time}\n\n\n\n"
 
         "📈 AKCIJOS\n\n"
         + format_stock("Tesla", tsla) + "\n"
