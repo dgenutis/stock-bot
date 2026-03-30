@@ -2,7 +2,7 @@ import os
 import requests
 import yfinance as yf
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 load_dotenv()
@@ -43,6 +43,68 @@ def get_yahoo_index(symbol):
     }
 
 
+def get_dividend_info(symbol):
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.info if ticker.info else {}
+        dividends = ticker.dividends
+
+        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+        if current_price is None or current_price == 0:
+            hist = ticker.history(period="5d", interval="1d")
+            if not hist.empty:
+                current_price = float(hist["Close"].iloc[-1])
+
+        last_dividend = None
+        trailing_yield = None
+
+        if dividends is not None and not dividends.empty:
+            last_dividend = float(dividends.iloc[-1])
+
+            # paskutinių 12 mėn dividendų suma
+            last_date = dividends.index[-1]
+            trailing_12m = dividends[dividends.index >= (last_date - timedelta(days=365))]
+            annual_dividend = float(trailing_12m.sum())
+
+            if current_price and current_price > 0:
+                trailing_yield = (annual_dividend / current_price) * 100
+
+        ex_dividend_date = info.get("exDividendDate")
+        ex_date_str = "N/A"
+        if ex_dividend_date:
+            ex_date_str = datetime.fromtimestamp(ex_dividend_date).strftime("%Y-%m-%d")
+
+        return {
+            "last_dividend": last_dividend,
+            "ex_date": ex_date_str,
+            "dividend_yield": trailing_yield
+        }
+
+    except Exception:
+        return {
+            "last_dividend": None,
+            "ex_date": "N/A",
+            "dividend_yield": None
+        }
+
+def get_market_news(category="general", limit=3):
+    try:
+        url = f"https://finnhub.io/api/v1/news?category={category}&token={API_KEY}"
+        response = requests.get(url, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+
+        headlines = []
+        for item in data[:limit]:
+            headline = item.get("headline")
+            if headline:
+                headlines.append(headline)
+
+        return headlines
+    except Exception:
+        return []
+
+
 def safe_float(value):
     try:
         return float(value)
@@ -52,7 +114,7 @@ def safe_float(value):
 
 def get_icon(percent):
     if percent > 0:
-        return "✅"
+        return "🟢"
     elif percent < 0:
         return "🔴"
     return "⚪"
@@ -78,6 +140,27 @@ def format_index_line(name, data):
 
     return f"• {name}: {format_number(price)} {icon} {percent:+.2f}%"
 
+
+def format_dividend_line(name, div_data):
+    last_dividend = div_data.get("last_dividend")
+    ex_date = div_data.get("ex_date")
+    dividend_yield = div_data.get("dividend_yield")
+
+    parts = [f"• {name}:"]
+
+    if last_dividend is not None:
+        parts.append(f"last {last_dividend:.2f}$")
+
+    if dividend_yield is not None:
+        parts.append(f"yield {dividend_yield:.1f}%")
+
+    if ex_date != "N/A":
+        parts.append(f"ex-date {ex_date}")
+
+    if len(parts) == 1:
+        return f"• {name}: no dividend data"
+
+    return " | ".join(parts)
 
 def detect_market_regime(sp500_data, nasdaq_data, vix_data):
     sp500_change = safe_float(sp500_data.get("dp"))
@@ -125,9 +208,22 @@ def main():
     lucid = get_stock("LCID")
     tal = get_stock("TAL")
 
+    # Dividendai per Yahoo
+    tsla_div = get_dividend_info("TSLA")
+    aapl_div = get_dividend_info("AAPL")
+    intc_div = get_dividend_info("INTC")
+    bac_div = get_dividend_info("BAC")
+    t_div = get_dividend_info("T")
+    wkey_div = get_dividend_info("WKEY")
+    lucid_div = get_dividend_info("LCID")
+    tal_div = get_dividend_info("TAL")
+
     # Crypto per Finnhub
     btc = get_stock("BINANCE:BTCUSDT")
     eth = get_stock("BINANCE:ETHUSDT")
+
+    # News per Finnhub
+    news = get_market_news(category="general", limit=3)
 
     text = (
         "📊 PORTFOLIO UPDATE\n"
@@ -152,13 +248,31 @@ def main():
         f"{format_price_line('Lucid', lucid)}\n"
         f"{format_price_line('TAL Education', tal)}\n\n"
 
+        "💸 DIVIDENDS\n"
+        "──────────────────\n"
+        f"{format_dividend_line('Tesla', tsla_div)}\n"
+        f"{format_dividend_line('Apple', aapl_div)}\n"
+        f"{format_dividend_line('Intel', intc_div)}\n"
+        f"{format_dividend_line('Bank of America', bac_div)}\n"
+        f"{format_dividend_line('AT&T', t_div)}\n"
+        f"{format_dividend_line('WISeKey', wkey_div)}\n"
+        f"{format_dividend_line('Lucid', lucid_div)}\n"
+        f"{format_dividend_line('TAL Education', tal_div)}\n\n"
+
         "💰 CRYPTO\n"
         "──────────────────\n"
         f"{format_price_line('Bitcoin', btc)}\n"
         f"{format_price_line('Ethereum', eth)}\n\n"
-
-        "Disclaimer: For informational purposes only. Not financial advice."
     )
+
+    if news:
+        text += "📰 NEWS\n"
+        text += "──────────────────\n"
+        for headline in news:
+            text += f"• {headline}\n"
+        text += "\n"
+
+    text += "Disclaimer: For informational purposes only. Not financial advice."
 
     send_telegram_message(text)
     print("Žinutė išsiųsta sėkmingai.")
