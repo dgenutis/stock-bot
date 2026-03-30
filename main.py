@@ -27,11 +27,27 @@ def get_yahoo_index(symbol):
         return {"c": 0, "d": 0, "dp": 0}
 
     close_today = float(hist["Close"].iloc[-1])
+    close_prev = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else close_today
 
-    if len(hist) >= 2:
-        close_prev = float(hist["Close"].iloc[-2])
-    else:
-        close_prev = close_today
+    change = close_today - close_prev
+    percent = (change / close_prev * 100) if close_prev != 0 else 0
+
+    return {
+        "c": close_today,
+        "d": change,
+        "dp": percent
+    }
+
+
+def get_yahoo_quote(symbol):
+    ticker = yf.Ticker(symbol)
+    hist = ticker.history(period="5d", interval="1d")
+
+    if hist.empty:
+        return {"c": 0, "d": 0, "dp": 0}
+
+    close_today = float(hist["Close"].iloc[-1])
+    close_prev = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else close_today
 
     change = close_today - close_prev
     percent = (change / close_prev * 100) if close_prev != 0 else 0
@@ -61,7 +77,6 @@ def get_dividend_info(symbol):
         if dividends is not None and not dividends.empty:
             last_dividend = float(dividends.iloc[-1])
 
-            # paskutinių 12 mėn dividendų suma
             last_date = dividends.index[-1]
             trailing_12m = dividends[dividends.index >= (last_date - timedelta(days=365))]
             annual_dividend = float(trailing_12m.sum())
@@ -86,6 +101,7 @@ def get_dividend_info(symbol):
             "ex_date": "N/A",
             "dividend_yield": None
         }
+
 
 def get_market_news(category="general", limit=3):
     try:
@@ -124,13 +140,22 @@ def format_number(value, decimals=2):
     return f"{value:,.{decimals}f}"
 
 
-def format_price_line(name, data):
+def format_price_line(name, data, currency="$"):
     price = safe_float(data.get("c"))
     change = safe_float(data.get("d"))
     percent = safe_float(data.get("dp"))
     icon = get_icon(percent)
 
-    return f"• {name}: {format_number(price)}$ {icon} {change:+.2f}$ ({percent:+.2f}%)"
+    return f"• {name}: {format_number(price)}{currency} {icon} {change:+.2f}{currency} ({percent:+.2f}%)"
+
+
+def format_etf_line(name, data, currency="€"):
+    price = safe_float(data.get("c"))
+    change = safe_float(data.get("d"))
+    percent = safe_float(data.get("dp"))
+    icon = get_icon(percent)
+
+    return f"• {name}: {format_number(price)}{currency} {icon} {change:+.2f}{currency} ({percent:+.2f}%)"
 
 
 def format_index_line(name, data):
@@ -162,10 +187,11 @@ def format_dividend_line(name, div_data):
 
     return " | ".join(parts)
 
+
 def detect_market_regime(sp500_data, nasdaq_data, vix_data):
     sp500_change = safe_float(sp500_data.get("dp"))
     nasdaq_change = safe_float(nasdaq_data.get("dp"))
-    vix_value = safe_float(vix_data.get("c"))
+    vix_value = safe_float(sp500_data.get("c")) if False else safe_float(vix_data.get("c"))
 
     avg_change = (sp500_change + nasdaq_change) / 2
 
@@ -198,6 +224,10 @@ def main():
 
     market_regime = detect_market_regime(sp500, nasdaq, vix)
 
+    # ETF per Yahoo
+    spyl = get_yahoo_quote("SPYL.DE")
+    wexe = get_yahoo_quote("WEXE.DE")  # jei rodys 0, reikės patestuoti kitą Yahoo simbolį
+
     # Akcijos per Finnhub
     tsla = get_stock("TSLA")
     aapl = get_stock("AAPL")
@@ -207,6 +237,8 @@ def main():
     wkey = get_stock("WKEY")
     lucid = get_stock("LCID")
     tal = get_stock("TAL")
+    msft = get_stock("MSFT")
+    beam = get_stock("BEAM")
 
     # Dividendai per Yahoo
     tsla_div = get_dividend_info("TSLA")
@@ -217,6 +249,8 @@ def main():
     wkey_div = get_dividend_info("WKEY")
     lucid_div = get_dividend_info("LCID")
     tal_div = get_dividend_info("TAL")
+    msft_div = get_dividend_info("MSFT")
+    beam_div = get_dividend_info("BEAM")
 
     # Crypto per Finnhub
     btc = get_stock("BINANCE:BTCUSDT")
@@ -237,6 +271,11 @@ def main():
         f"{format_index_line('VIX Index', vix)}\n"
         f"• Market Regime: {market_regime}\n\n"
 
+        "📦 ETFs\n"
+        "──────────────────\n"
+        f"{format_etf_line('SPYL (Acc)', spyl, '€')}\n"
+        f"{format_etf_line('WEXE (Acc)', wexe, '€')}\n\n"
+
         "📊 STOCKS\n"
         "──────────────────\n"
         f"{format_price_line('Tesla', tsla)}\n"
@@ -246,7 +285,9 @@ def main():
         f"{format_price_line('AT&T', t)}\n"
         f"{format_price_line('WISeKey', wkey)}\n"
         f"{format_price_line('Lucid', lucid)}\n"
-        f"{format_price_line('TAL Education', tal)}\n\n"
+        f"{format_price_line('TAL Education', tal)}\n"
+        f"{format_price_line('Microsoft', msft)}\n"
+        f"{format_price_line('Beam Therapeutics', beam)}\n\n"
 
         "💸 DIVIDENDS\n"
         "──────────────────\n"
@@ -257,7 +298,9 @@ def main():
         f"{format_dividend_line('AT&T', t_div)}\n"
         f"{format_dividend_line('WISeKey', wkey_div)}\n"
         f"{format_dividend_line('Lucid', lucid_div)}\n"
-        f"{format_dividend_line('TAL Education', tal_div)}\n\n"
+        f"{format_dividend_line('TAL Education', tal_div)}\n"
+        f"{format_dividend_line('Microsoft', msft_div)}\n"
+        f"{format_dividend_line('Beam Therapeutics', beam_div)}\n\n"
 
         "💰 CRYPTO\n"
         "──────────────────\n"
