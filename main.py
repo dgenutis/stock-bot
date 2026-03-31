@@ -315,7 +315,6 @@ def main():
             text += f"• {headline}\n"
         text += "\n"
 
-    text += "Disclaimer: For informational purposes only. Not financial advice."
 
     send_telegram_message(text)
     print("Žinutė išsiųsta sėkmingai.")

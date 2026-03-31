@@ -239,7 +239,7 @@ def main():
         for n in news:
             text += f"• {n}\n"
 
-    text += "\nDisclaimer: Not financial advice."
+   
 
     send(text)
     print("Baltic žinutė išsiųsta sėkmingai.")
