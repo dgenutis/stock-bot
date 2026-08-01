@@ -324,8 +324,8 @@ def main():
 
         "💰 CRYPTO\n"
         "──────────────────\n"
-        f"{format_price_line('Bitcoin', btc)}\n"
-        f"{format_price_line('Ethereum', eth)}\n\n"
+        f"{format_price_line('Bitcoin', btc, '€')}\n"
+        f"{format_price_line('Ethereum', eth, '€')}\n\n"
     )
 
     if news:
