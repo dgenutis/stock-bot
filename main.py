@@ -239,6 +239,11 @@ def main():
     tal = get_stock("TAL")
     msft = get_stock("MSFT")
     beam = get_stock("BEAM")
+    netfkix = get_stock("NFLX")
+    nike = get_stock("NKE")
+    elf = get_stock("ELF")
+    celcius = get_stock("CELH")
+    sofi = get_stock("SOFI")
 
     # Dividendai per Yahoo
     tsla_div = get_dividend_info("TSLA")
@@ -251,6 +256,11 @@ def main():
     tal_div = get_dividend_info("TAL")
     msft_div = get_dividend_info("MSFT")
     beam_div = get_dividend_info("BEAM")
+    netfkix_div = get_dividend_info("NFLX")
+    nike_div = get_dividend_info("NKE")
+    elf_div = get_dividend_info("ELF")
+    celcius_div = get_dividend_info("CELH")
+    sofi_div = get_dividend_info("SOFI")
 
     # Crypto per Finnhub
     btc = get_stock("BINANCE:BTCUSDT")
@@ -288,6 +298,11 @@ def main():
         f"{format_price_line('TAL Education', tal)}\n"
         f"{format_price_line('Microsoft', msft)}\n"
         f"{format_price_line('Beam Therapeutics', beam)}\n\n"
+        f"{format_price_line('Netflix', netfkix)}\n"
+        f"{format_price_line('Nike', nike)}\n"
+        f"{format_price_line('e.l.f. Beauty', elf)}\n"
+        f"{format_price_line('Celsius Holdings', celcius)}\n"
+        f"{format_price_line('SoFi Technologies', sofi)}\n\n"
 
         "💸 DIVIDENDS\n"
         "──────────────────\n"
@@ -301,6 +316,11 @@ def main():
         f"{format_dividend_line('TAL Education', tal_div)}\n"
         f"{format_dividend_line('Microsoft', msft_div)}\n"
         f"{format_dividend_line('Beam Therapeutics', beam_div)}\n\n"
+        f"{format_dividend_line('Netflix', netfkix_div)}\n"
+        f"{format_dividend_line('Nike', nike_div)}\n"
+        f"{format_dividend_line('e.l.f. Beauty', elf_div)}\n"
+        f"{format_dividend_line('Celsius Holdings', celcius_div)}\n"
+        f"{format_dividend_line('SoFi Technologies', sofi_div)}\n\n"
 
         "💰 CRYPTO\n"
         "──────────────────\n"
