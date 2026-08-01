@@ -263,8 +263,8 @@ def main():
     sofi_div = get_dividend_info("SOFI")
 
     # Crypto per Finnhub
-    btc = get_stock("BINANCE:BTCUSDT")
-    eth = get_stock("BINANCE:ETHUSDT")
+    btc = get_stock("BINANCE:BTCEUR")
+    eth = get_stock("BINANCE:ETHEUR")
 
     # News per Finnhub
     news = get_market_news(category="general", limit=3)
