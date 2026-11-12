@@ -207,8 +207,9 @@ def main():
     ]
 
     # CRYPTO
-    btc = get_yahoo_data("BTC-USD")
-    eth = get_yahoo_data("ETH-USD")
+    btc = get_yahoo_data("BTC-EUR")
+    eth = get_yahoo_data("ETH-EUR")
+    atom = get_yahoo_data("ATOM-EUR")
 
     # NEWS
     news = get_market_news()
