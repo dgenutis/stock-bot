@@ -231,16 +231,11 @@ def main():
 
     market_regime = detect_market_regime(sp500, nasdaq, vix)
 
-    # ETF duomenys
+    # ETF per Yahoo
     spyl = get_yahoo_quote("SPYL.DE")
-    wexe = get_yahoo_quote("WEXE.DE")
+    wexe = get_yahoo_quote("WEXE.DE")  # jei rodys 0, reikės patestuoti kitą Yahoo simbolį
 
-    etf_items = [
-        ("SPYL (Acc)", spyl, "€"),
-        ("WEXE (Acc)", wexe, "€"),
-    ]
-
-    # Akcijų duomenys
+    # Akcijos per Finnhub
     tsla = get_stock("TSLA")
     aapl = get_stock("AAPL")
     intc = get_stock("INTC")
@@ -256,34 +251,12 @@ def main():
     elf = get_stock("ELF")
     celcius = get_stock("CELH")
     sofi = get_stock("SOFI")
-    o = get_stock("O")
-    hnst = get_stock("HNST")
-    vf = get_stock("VFC")
-    lac = get_stock("LAC")
+    o = get_stock("O")  # Realty Income Corporation
+    hnst = get_stock("HNST")  # Honest Company
+    vf = get_stock("VFC")  # VF Corporation
+    lac = get_stock("LAC")  # Lithium Americas Corp
 
-    stock_items = [
-        ("Tesla", tsla),
-        ("Apple", aapl),
-        ("Intel", intc),
-        ("Bank of America", bac),
-        ("AT&T", t),
-        ("WISeKey", wkey),
-        ("Lucid", lucid),
-        ("TAL", tal),
-        ("Microsoft", msft),
-        ("Beam", beam),
-        ("Netflix", netfkix),
-        ("Nike", nike),
-        ("e.l.f.", elf),
-        ("Celsius", celcius),
-        ("SoFi", sofi),
-        ("Realty", o),
-        ("Honest", hnst),
-        ("VF", vf),
-        ("Lithium", lac),
-    ]
-
-    # Dividendų duomenys
+    # Dividendai per Yahoo
     tsla_div = get_dividend_info("TSLA")
     aapl_div = get_dividend_info("AAPL")
     intc_div = get_dividend_info("INTC")
@@ -303,6 +276,13 @@ def main():
     hnst_div = get_dividend_info("HNST")
     vf_div = get_dividend_info("VFC")
     lac_div = get_dividend_info("LAC")
+    # Crypto per Finnhub
+    btc = get_stock("BINANCE:BTCEUR")
+    eth = get_stock("BINANCE:ETHEUR")
+    atom = get_stock("BINANCE:ATOMEUR")
+
+    # News per Finnhub
+    news = get_market_news(category="general", limit=3)
 
     dividend_items = [
         ("Tesla", tsla_div),
@@ -326,77 +306,76 @@ def main():
         ("Lithium", lac_div),
     ]
 
-    # Kriptovaliutos
-    btc = get_stock("BINANCE:BTCEUR")
-    eth = get_stock("BINANCE:ETHEUR")
-    atom = get_stock("BINANCE:ATOMEUR")
-
-    crypto_items = [
-        ("Bitcoin", btc, "€"),
-        ("Ethereum", eth, "€"),
-        ("Atom", atom, "€"),
-    ]
-
-    # Naujienos
-    news = get_market_news(category="general", limit=3)
-
-    # Eilutės generuojamos iš tų pačių sąrašų, pagal kuriuos skaičiuojami kiekiai
-    etf_lines = [
-        format_etf_line(name, data, currency)
-        for name, data, currency in etf_items
-    ]
-
-    stock_lines = [
-        format_price_line(name, data)
-        for name, data in stock_items
-    ]
-
     dividend_lines = [
         line for name, data in dividend_items
         if (line := format_dividend_line(name, data)) is not None
     ]
 
-    crypto_lines = [
-        format_price_line(name, data, currency)
-        for name, data, currency in crypto_items
-    ]
+    dividend_section = (
+        f"💸 DIVIDENDS ({len(dividend_lines)})\n"
+        "──────────────────\n"
+        + ("\n".join(dividend_lines) if dividend_lines else "No dividend-paying stocks")
+        + "\n\n"
+    )
+
 
     text = (
-        "📊 PORTFOLIO UPDATE\\n"
-        "━━━━━━━━━━━━━━━━━━\\n"
-        f"🕒 {update_time}\\n\\n"
+        "📊 PORTFOLIO UPDATE\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        f"🕒 {update_time}\n\n"
 
-        "📈 MARKET OVERVIEW\\n"
-        "──────────────────\\n"
-        f"{format_index_line('S&P 500', sp500)}\\n"
-        f"{format_index_line('NASDAQ', nasdaq)}\\n"
-        f"{format_index_line('VIX Index', vix)}\\n"
-        f"• Market Regime: {market_regime}\\n\\n"
+        "📈 MARKET OVERVIEW\n"
+        "──────────────────\n"
+        f"{format_index_line('S&P 500', sp500)}\n"
+        f"{format_index_line('NASDAQ', nasdaq)}\n"
+        f"{format_index_line('VIX Index', vix)}\n"
+        f"• Market Regime: {market_regime}\n\n"
 
-        f"📦 ETFs ({len(etf_items)})\\n"
-        "──────────────────\\n"
-        + "\\n".join(etf_lines) + "\\n\\n"
+        f"📦 ETFs ({2})\n"
+        "──────────────────\n"
+        f"{format_etf_line('SPYL (Acc)', spyl, '€')}\n"
+        f"{format_etf_line('WEXE (Acc)', wexe, '€')}\n\n"
 
-        f"📊 STOCKS ({len(stock_items)})\\n"
-        "──────────────────\\n"
-        + "\\n".join(stock_lines) + "\\n\\n"
+        f"📊 STOCKS ({19})\n"
+        "──────────────────\n"
+        f"{format_price_line('Tesla', tsla)}\n"
+        f"{format_price_line('Apple', aapl)}\n"
+        f"{format_price_line('Intel', intc)}\n"
+        f"{format_price_line('Bank of America', bac)}\n"
+        f"{format_price_line('AT&T', t)}\n"
+        f"{format_price_line('WISeKey', wkey)}\n"
+        f"{format_price_line('Lucid', lucid)}\n"
+        f"{format_price_line('TAL', tal)}\n"
+        f"{format_price_line('Microsoft', msft)}\n"
+        f"{format_price_line('Beam', beam)}\n"
+        f"{format_price_line('Netflix', netfkix)}\n"
+        f"{format_price_line('Nike', nike)}\n"
+        f"{format_price_line('e.l.f.', elf)}\n"
+        f"{format_price_line('Celsius', celcius)}\n"
+        f"{format_price_line('SoFi', sofi)}\n"
+        f"{format_price_line('Realty', o)}\n"
+        f"{format_price_line('Honest', hnst)}\n"
+        f"{format_price_line('VF', vf)}\n"
+        f"{format_price_line('Lithium', lac)}\n\n"
 
-        f"💸 DIVIDENDS ({len(dividend_lines)})\\n"
-        "──────────────────\\n"
-        + ("\\n".join(dividend_lines) if dividend_lines else "No dividend-paying stocks")
-        + "\\n\\n"
+        f"{dividend_section}"
 
-        f"💰 CRYPTO ({len(crypto_items)})\\n"
-        "──────────────────\\n"
-        + "\\n".join(crypto_lines) + "\\n\\n"
+        
+
+        f"💰 CRYPTO ({3})\n"
+        "──────────────────\n"
+        f"{format_price_line('Bitcoin', btc, '€')}\n"
+        f"{format_price_line('Ethereum', eth, '€')}\n"
+        f"{format_price_line('Atom', atom, '€')}\n\n"
     )
 
     if news:
-        text += f"📰 NEWS ({len(news)})\\n"
-        text += "──────────────────\\n"
+        text += f"📰 NEWS ({len(news)})\n"
+        text += "──────────────────\n"
         for headline in news:
-            text += f"• {headline}\\n"
-        text += "\\n"
+            text += f"• {headline}\n"
+        text += "\n"
+
 
     send_telegram_message(text)
     print("Žinutė išsiųsta sėkmingai.")
