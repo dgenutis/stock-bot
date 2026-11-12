@@ -216,7 +216,7 @@ def main():
 
     # Skaičiai antraštėse atitinka faktiškai rodomų įrašų skaičių
     stock_count = 5
-    crypto_count = 2
+    crypto_count = 3
     dividend_count = len(dividend_lines)
     news_count = len(news)
 
