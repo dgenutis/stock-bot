@@ -249,8 +249,9 @@ def main():
 
         f"💰 CRYPTO ({crypto_count})\n"
         "──────────────────\n"
-        f"{stock_line('BTC', btc, '$')}\n"
-        f"{stock_line('ETH', eth, '$')}\n\n"
+        f"{stock_line('BTC', btc, '€')}\n"
+        f"{stock_line('ETH', eth, '€')}\n"
+        f"{stock_line('ATOM', atom, '€')}\n\n"
     )
 
     if news:
