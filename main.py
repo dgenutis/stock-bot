@@ -77,8 +77,13 @@ def get_dividend_info(symbol):
         if dividends is not None and not dividends.empty:
             last_dividend = float(dividends.iloc[-1])
 
-            last_date = dividends.index[-1]
-            trailing_12m = dividends[dividends.index >= (last_date - timedelta(days=365))]
+            # Dividendų suma per paskutinius 12 mėnesių nuo šiandien
+            index_tz = dividends.index.tz
+            now_for_dividends = (
+                datetime.now(index_tz) if index_tz is not None else datetime.now()
+            )
+            cutoff_date = now_for_dividends - timedelta(days=365)
+            trailing_12m = dividends[dividends.index >= cutoff_date]
             annual_dividend = float(trailing_12m.sum())
 
             if current_price and current_price > 0:
@@ -166,15 +171,19 @@ def format_index_line(name, data):
     return f"• {name}: {format_number(price)} {icon} {percent:+.2f}%"
 
 
+
 def format_dividend_line(name, div_data):
     last_dividend = div_data.get("last_dividend")
     ex_date = div_data.get("ex_date")
     dividend_yield = div_data.get("dividend_yield")
 
+    # Jei akcija niekada nemokėjo dividendų – nerodyti
+    if last_dividend is None or last_dividend <= 0:
+        return None
+
     parts = [f"• {name}:"]
 
-    if last_dividend is not None:
-        parts.append(f"last {last_dividend:.2f}$")
+    parts.append(f"last {last_dividend:.2f}$")
 
     if dividend_yield is not None:
         parts.append(f"yield {dividend_yield:.1f}%")
@@ -182,10 +191,8 @@ def format_dividend_line(name, div_data):
     if ex_date != "N/A":
         parts.append(f"ex-date {ex_date}")
 
-    if len(parts) == 1:
-        return f"• {name}: no dividend data"
-
     return " | ".join(parts)
+
 
 
 def detect_market_regime(sp500_data, nasdaq_data, vix_data):
@@ -276,6 +283,41 @@ def main():
     # News per Finnhub
     news = get_market_news(category="general", limit=3)
 
+    dividend_items = [
+        ("Tesla", tsla_div),
+        ("Apple", aapl_div),
+        ("Intel", intc_div),
+        ("Bank of America", bac_div),
+        ("AT&T", t_div),
+        ("WISeKey", wkey_div),
+        ("Lucid", lucid_div),
+        ("TAL", tal_div),
+        ("Microsoft", msft_div),
+        ("Beam", beam_div),
+        ("Netflix", netfkix_div),
+        ("Nike", nike_div),
+        ("e.l.f.", elf_div),
+        ("Celsius", celcius_div),
+        ("SoFi", sofi_div),
+        ("Realty", o_div),
+        ("Honest", hnst_div),
+        ("VF", vf_div),
+        ("Lithium", lac_div),
+    ]
+
+    dividend_lines = [
+        line for name, data in dividend_items
+        if (line := format_dividend_line(name, data)) is not None
+    ]
+
+    dividend_section = (
+        "💸 DIVIDENDS\n"
+        "──────────────────\n"
+        + ("\n".join(dividend_lines) if dividend_lines else "No dividend-paying stocks")
+        + "\n\n"
+    )
+
+
     text = (
         "📊 PORTFOLIO UPDATE\n"
         "━━━━━━━━━━━━━━━━━━\n"
@@ -315,27 +357,9 @@ def main():
         f"{format_price_line('VF', vf)}\n"
         f"{format_price_line('Lithium', lac)}\n\n"
 
-        "💸 DIVIDENDS\n"
-        "──────────────────\n"
-        f"{format_dividend_line('Tesla', tsla_div)}\n"
-        f"{format_dividend_line('Apple', aapl_div)}\n"
-        f"{format_dividend_line('Intel', intc_div)}\n"
-        f"{format_dividend_line('Bank of America', bac_div)}\n"
-        f"{format_dividend_line('AT&T', t_div)}\n"
-        f"{format_dividend_line('WISeKey', wkey_div)}\n"
-        f"{format_dividend_line('Lucid', lucid_div)}\n"
-        f"{format_dividend_line('TAL', tal_div)}\n"
-        f"{format_dividend_line('Microsoft', msft_div)}\n"
-        f"{format_dividend_line('Beam', beam_div)}\n"
-        f"{format_dividend_line('Netflix', netfkix_div)}\n"
-        f"{format_dividend_line('Nike', nike_div)}\n"
-        f"{format_dividend_line('e.l.f.', elf_div)}\n"
-        f"{format_dividend_line('Celsius', celcius_div)}\n"
-        f"{format_dividend_line('SoFi', sofi_div)}\n"
-        f"{format_dividend_line('Realty', o_div)}\n"
-        f"{format_dividend_line('Honest', hnst_div)}\n"
-        f"{format_dividend_line('VF', vf_div)}\n"
-        f"{format_dividend_line('Lithium', lac_div)}\n\n"
+        f"{dividend_section}"
+
+        
 
         "💰 CRYPTO\n"
         "──────────────────\n"
