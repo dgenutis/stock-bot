@@ -279,6 +279,7 @@ def main():
     # Crypto per Finnhub
     btc = get_stock("BINANCE:BTCEUR")
     eth = get_stock("BINANCE:ETHEUR")
+    atom = get_stock("BINANCE:ATOMEUR")
 
     # News per Finnhub
     news = get_market_news(category="general", limit=3)
@@ -364,7 +365,8 @@ def main():
         f"💰 CRYPTO ({2})\n"
         "──────────────────\n"
         f"{format_price_line('Bitcoin', btc, '€')}\n"
-        f"{format_price_line('Ethereum', eth, '€')}\n\n"
+        f"{format_price_line('Ethereum', eth, '€')}\n"
+        f"{format_price_line('Atom', atom, '€')}\n\n"
     )
 
     if news:
