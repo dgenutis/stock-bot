@@ -52,8 +52,13 @@ def get_dividend_info(symbol):
         if dividends is not None and not dividends.empty:
             last_dividend = float(dividends.iloc[-1])
 
-            last_date = dividends.index[-1]
-            trailing_12m = dividends[dividends.index >= (last_date - timedelta(days=365))]
+            # Dividendų suma per paskutinius 12 mėnesių nuo šiandien
+            index_tz = dividends.index.tz
+            now_for_dividends = (
+                datetime.now(index_tz) if index_tz is not None else datetime.now()
+            )
+            cutoff_date = now_for_dividends - timedelta(days=365)
+            trailing_12m = dividends[dividends.index >= cutoff_date]
             annual_dividend = float(trailing_12m.sum())
 
             if current_price and current_price > 0:
@@ -123,19 +128,17 @@ def dividend_line(name, d, cur="€"):
     ex_date = d.get("ex_date")
     dividend_yield = d.get("dividend_yield")
 
-    parts = [f"• {name}:"]
+    # Nerodyti bendrovių, kurios niekada nemokėjo dividendų
+    if last_dividend is None or last_dividend <= 0:
+        return None
 
-    if last_dividend is not None:
-        parts.append(f"last {last_dividend:.2f}{cur}")
+    parts = [f"• {name}:", f"last {last_dividend:.2f}{cur}"]
 
     if dividend_yield is not None:
         parts.append(f"yield {dividend_yield:.1f}%")
 
-    if ex_date != "N/A":
+    if ex_date and ex_date != "N/A":
         parts.append(f"ex-date {ex_date}")
-
-    if len(parts) == 1:
-        return f"• {name}: no dividend data"
 
     return " | ".join(parts)
 
@@ -190,12 +193,31 @@ def main():
     ign_d = get_dividend_info("IGN1L.VS")
     tel_d = get_dividend_info("TEL1L.VS")
 
+    dividend_items = [
+        ("KN Energies", kne_d),
+        ("DelfinGroup", dgr_d),
+        ("Artea bankas", roe_d),
+        ("Ignitis", ign_d),
+        ("Telia", tel_d),
+    ]
+
+    dividend_lines = [
+        line for name, data in dividend_items
+        if (line := dividend_line(name, data)) is not None
+    ]
+
     # CRYPTO
     btc = get_yahoo_data("BTC-USD")
     eth = get_yahoo_data("ETH-USD")
 
     # NEWS
     news = get_market_news()
+
+    # Skaičiai antraštėse atitinka faktiškai rodomų įrašų skaičių
+    stock_count = 5
+    crypto_count = 2
+    dividend_count = len(dividend_lines)
+    news_count = len(news)
 
     # TEXT
     text = (
@@ -211,7 +233,7 @@ def main():
         f"{index_line('OMX Riga', riga)}\n"
         f"• Market Regime: {regime}\n\n"
 
-        "🇱🇹 STOCKS\n"
+        f"🇱🇹 STOCKS ({stock_count})\n"
         "──────────────────\n"
         f"{stock_line('KN Energies', kne)}\n"
         f"{stock_line('DelfinGroup', dgr)}\n"
@@ -219,27 +241,22 @@ def main():
         f"{stock_line('Ignitis', ign)}\n"
         f"{stock_line('Telia', tel)}\n\n"
 
-        "💸 DIVIDENDS\n"
+        f"💸 DIVIDENDS ({dividend_count})\n"
         "──────────────────\n"
-        f"{dividend_line('KN Energies', kne_d)}\n"
-        f"{dividend_line('DelfinGroup', dgr_d)}\n"
-        f"{dividend_line('Artea bankas', roe_d)}\n"
-        f"{dividend_line('Ignitis', ign_d)}\n"
-        f"{dividend_line('Telia', tel_d)}\n\n"
+        + ("\n".join(dividend_lines) if dividend_lines else "No dividend-paying stocks")
+        + "\n\n"
 
-        "💰 CRYPTO\n"
+        f"💰 CRYPTO ({crypto_count})\n"
         "──────────────────\n"
         f"{stock_line('BTC', btc, '$')}\n"
         f"{stock_line('ETH', eth, '$')}\n\n"
     )
 
     if news:
-        text += "📰 NEWS\n"
+        text += f"📰 NEWS ({news_count})\n"
         text += "──────────────────\n"
         for n in news:
             text += f"• {n}\n"
-
-   
 
     send(text)
     print("Baltic žinutė išsiųsta sėkmingai.")

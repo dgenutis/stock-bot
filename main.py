@@ -311,7 +311,7 @@ def main():
     ]
 
     dividend_section = (
-        "💸 DIVIDENDS\n"
+        f"💸 DIVIDENDS ({len(dividend_lines)})\n"
         "──────────────────\n"
         + ("\n".join(dividend_lines) if dividend_lines else "No dividend-paying stocks")
         + "\n\n"
@@ -330,12 +330,12 @@ def main():
         f"{format_index_line('VIX Index', vix)}\n"
         f"• Market Regime: {market_regime}\n\n"
 
-        "📦 ETFs\n"
+        f"📦 ETFs ({2})\n"
         "──────────────────\n"
         f"{format_etf_line('SPYL (Acc)', spyl, '€')}\n"
         f"{format_etf_line('WEXE (Acc)', wexe, '€')}\n\n"
 
-        "📊 STOCKS\n"
+        f"📊 STOCKS ({19})\n"
         "──────────────────\n"
         f"{format_price_line('Tesla', tsla)}\n"
         f"{format_price_line('Apple', aapl)}\n"
@@ -361,14 +361,14 @@ def main():
 
         
 
-        "💰 CRYPTO\n"
+        f"💰 CRYPTO ({2})\n"
         "──────────────────\n"
         f"{format_price_line('Bitcoin', btc, '€')}\n"
         f"{format_price_line('Ethereum', eth, '€')}\n\n"
     )
 
     if news:
-        text += "📰 NEWS\n"
+        text += f"📰 NEWS ({len(news)})\n"
         text += "──────────────────\n"
         for headline in news:
             text += f"• {headline}\n"
