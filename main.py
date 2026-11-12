@@ -244,6 +244,10 @@ def main():
     elf = get_stock("ELF")
     celcius = get_stock("CELH")
     sofi = get_stock("SOFI")
+    o = get_stock("O")  # Realty Income Corporation
+    hnst = get_stock("HNST")  # Honest Company
+    vf = get_stock("VFC")  # VF Corporation
+    lac = get_stock("LAC")  # Lithium Americas Corp
 
     # Dividendai per Yahoo
     tsla_div = get_dividend_info("TSLA")
@@ -261,7 +265,10 @@ def main():
     elf_div = get_dividend_info("ELF")
     celcius_div = get_dividend_info("CELH")
     sofi_div = get_dividend_info("SOFI")
-
+    o_div = get_dividend_info("O")
+    hnst_div = get_dividend_info("HNST")
+    vf_div = get_dividend_info("VFC")
+    lac_div = get_dividend_info("LAC")
     # Crypto per Finnhub
     btc = get_stock("BINANCE:BTCEUR")
     eth = get_stock("BINANCE:ETHEUR")
@@ -302,7 +309,11 @@ def main():
         f"{format_price_line('Nike', nike)}\n"
         f"{format_price_line('e.l.f. Beauty', elf)}\n"
         f"{format_price_line('Celsius Holdings', celcius)}\n"
-        f"{format_price_line('SoFi Technologies', sofi)}\n\n"
+        f"{format_price_line('SoFi Technologies', sofi)}\n"
+        f"{format_price_line('Realty Income', o)}\n"
+        f"{format_price_line('The Honest Company', hnst)}\n"
+        f"{format_price_line('VF Corporation', vf)}\n"
+        f"{format_price_line('Lithium Americas', lac)}\n\n"
 
         "💸 DIVIDENDS\n"
         "──────────────────\n"
@@ -320,7 +331,11 @@ def main():
         f"{format_dividend_line('Nike', nike_div)}\n"
         f"{format_dividend_line('e.l.f. Beauty', elf_div)}\n"
         f"{format_dividend_line('Celsius Holdings', celcius_div)}\n"
-        f"{format_dividend_line('SoFi Technologies', sofi_div)}\n\n"
+        f"{format_dividend_line('SoFi Technologies', sofi_div)}\n"
+        f"{format_dividend_line('Realty Income', o_div)}\n"
+        f"{format_dividend_line('The Honest Company', hnst_div)}\n"
+        f"{format_dividend_line('VF Corporation', vf_div)}\n"
+        f"{format_dividend_line('Lithium Americas', lac_div)}\n\n"
 
         "💰 CRYPTO\n"
         "──────────────────\n"
